@@ -2,57 +2,200 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-  <title>Accessible TalkBack Video Player</title>
-
-  <!-- PWA & Mobile Standalone Meta Tags for "Add to Home Screen" -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#000000" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="BlindPlayer" />
-  <meta name="description" content="High-contrast, TalkBack and VoiceOver optimized accessible video and audio player with giant center controls." />
-
-  <!-- Dynamic Manifest link populated via JS on load -->
-  <link id="pwa-manifest" rel="manifest" href="" />
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
+  <meta name="apple-mobile-web-app-title" content="Blind Player" />
+  <title>Accessible TalkBack Video Player</title>
   <style>
-    /* High Contrast WCAG AAA Focus & Touch Styles */
     :root {
-      --bg-primary: #000000;
-      --bg-card: #111827;
-      --accent-yellow: #facc15;
-      --accent-white: #ffffff;
+      --bg: #000000;
+      --card: #121212;
+      --yellow: #FFD600;
+      --white: #FFFFFF;
+      --cyan: #00E5FF;
+      --green: #00E676;
+      --border: 4px solid #FFD600;
     }
 
-    body {
-      background-color: #000000;
-      color: #ffffff;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      overscroll-behavior-y: contain;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Ultra-clear focus ring for TalkBack / VoiceOver / Switch Access navigation */
-    button:focus-visible,
-    label:focus-visible,
-    summary:focus-visible,
-    [tabindex]:focus-visible {
-      outline: 6px solid #facc15 !important;
-      outline-offset: 4px !important;
-      box-shadow: 0 0 0 10px rgba(250, 204, 21, 0.35) !important;
+    body, html {
+      width: 100%;
+      height: 100dvh;
+      background-color: var(--bg);
+      color: var(--white);
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
     }
 
-    /* Active press state for physical/visual feedback */
-    .touch-btn:active {
-      transform: scale(0.97);
+    /* TOP BAR: Video Info & Setup Buttons */
+    header {
+      padding: 10px 12px;
+      background: var(--card);
+      border-bottom: 3px solid #333;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    /* Screen-reader only utility that keeps elements discoverable by TalkBack */
-    .sr-only-live {
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #trackTitle {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--yellow);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .loader-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .top-btn {
+      background: #1F1F1F;
+      color: var(--white);
+      border: 3px solid var(--cyan);
+      border-radius: 12px;
+      padding: 12px 8px;
+      font-size: 1rem;
+      font-weight: 800;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .top-btn:focus, .top-btn:active {
+      outline: 4px solid var(--yellow);
+      background: #004D40;
+    }
+
+    /* VIDEO PREVIEW (Compact so Center Buttons stay huge) */
+    .video-container {
+      position: relative;
+      width: 100%;
+      height: 18dvh;
+      background: #050505;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 2px solid #222;
+    }
+
+    video {
+      max-width: 100%;
+      max-height: 100%;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* GIANT CENTER CONTROL PAD FOR TALKBACK */
+    main.center-controls {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1.35fr 1fr;
+      gap: 12px;
+      padding: 14px 12px;
+      align-items: stretch;
+    }
+
+    .ctrl-btn {
+      background: var(--card);
+      color: var(--white);
+      border: var(--border);
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 900;
+      cursor: pointer;
+      padding: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.8);
+    }
+
+    .ctrl-btn .icon {
+      font-size: 2.8rem;
+      line-height: 1;
+    }
+
+    .ctrl-btn .label {
+      font-size: 1.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    #playPauseBtn {
+      background: var(--yellow);
+      color: #000000;
+      border: 5px solid var(--white);
+    }
+
+    #playPauseBtn .icon {
+      font-size: 3.6rem;
+    }
+
+    #playPauseBtn .label {
+      font-size: 1.6rem;
+    }
+
+    .ctrl-btn:focus-visible, .ctrl-btn:active {
+      outline: 6px solid var(--cyan);
+      transform: scale(0.98);
+    }
+
+    /* BOTTOM BAR: Speak Status & Clear Library */
+    footer {
+      padding: 10px 12px 14px;
+      background: var(--card);
+      border-top: 3px solid #333;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 10px;
+    }
+
+    .bottom-btn {
+      background: #1A1A1A;
+      color: var(--green);
+      border: 3px solid var(--green);
+      border-radius: 14px;
+      padding: 14px 10px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .clear-btn {
+      color: #FF8A80;
+      border-color: #FF5252;
+      font-size: 0.95rem;
+    }
+
+    /* Screen Reader Live Announcer */
+    .sr-only {
       position: absolute;
       width: 1px;
       height: 1px;
@@ -60,836 +203,354 @@
       margin: -1px;
       overflow: hidden;
       clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border-width: 0;
+      border: 0;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between bg-black text-white select-none">
+<body>
 
-  <!-- =====================================================================
-       1. DEDICATED SCREEN READER LIVE ANNOUNCEMENT REGIONS
-       TalkBack & VoiceOver immediately speak text injected here.
-       ===================================================================== -->
-  <div id="sr-assertive" class="sr-only-live" aria-live="assertive" aria-atomic="true"></div>
-  <div id="sr-polite" class="sr-only-live" aria-live="polite" aria-atomic="true"></div>
+  <!-- Hidden Screen Reader Live Region -->
+  <div id="liveAnnouncer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
 
-  <!-- =====================================================================
-       2. TOP COMPACT BAR: Video Viewport + Current Track Info + File Loader
-       ===================================================================== -->
-  <header class="w-full px-3 pt-3 pb-2 border-b-4 border-yellow-400 bg-zinc-950" role="banner">
-    <div class="max-w-xl mx-auto flex flex-col gap-2">
-      
-      <!-- Top Row: App Title + Load Videos From Phone Button -->
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span class="inline-block w-4 h-4 rounded-full bg-yellow-400" aria-hidden="true"></span>
-          <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-yellow-400">
-            TalkBack Video Player
-          </h1>
-        </div>
+  <!-- Hidden File Inputs -->
+  <input type="file" id="videoInput" accept="video/*,audio/*" multiple hidden />
+  <input type="file" id="folderInput" webkitdirectory directory multiple hidden />
 
-        <!-- Hidden File Input + High-Contrast Accessible Trigger Button -->
-        <input 
-          type="file" 
-          id="local-file-input" 
-          accept="video/*,audio/*" 
-          multiple 
-          class="hidden" 
-          aria-hidden="true"
-          tabindex="-1"
-        />
-        <button
-          type="button"
-          id="btn-load-files"
-          aria-label="Open videos or audio files from phone storage. Double tap to browse files."
-          class="touch-btn bg-yellow-400 hover:bg-yellow-300 text-black font-black text-sm sm:text-base px-4 py-2.5 rounded-xl border-4 border-white shadow-lg flex items-center gap-2"
-        >
-          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
-          <span>Load Phone Videos</span>
-        </button>
-      </div>
-
-      <!-- Compact Video Preview + Live Status Banner -->
-      <div class="grid grid-cols-12 gap-3 items-center bg-zinc-900 p-2.5 rounded-2xl border-2 border-zinc-700">
-        <!-- Video Element (kept compact so giant center buttons dominate the screen) -->
-        <div class="col-span-4 sm:col-span-3 relative rounded-xl overflow-hidden bg-black border-2 border-yellow-400 aspect-video flex items-center justify-center">
-          <video 
-            id="main-video" 
-            class="w-full h-full object-contain"
-            playsinline 
-            preload="metadata"
-            aria-hidden="true"
-            tabindex="-1"
-          ></video>
-          <!-- Offline / Synth Fallback Canvas if no network or audio-only -->
-          <canvas id="fallback-canvas" class="hidden w-full h-full absolute inset-0" aria-hidden="true"></canvas>
-        </div>
-
-        <!-- Spoken & Visual Track Summary -->
-        <div class="col-span-8 sm:col-span-9 flex flex-col justify-center">
-          <p id="track-counter" class="text-xs sm:text-sm font-bold uppercase tracking-wider text-yellow-400">
-            Video 1 of 3
-          </p>
-          <h2 id="track-title" class="text-base sm:text-xl font-black text-white truncate">
-            Big Buck Bunny (Sample)
-          </h2>
-          <p id="visual-status-text" class="text-sm sm:text-base font-bold text-zinc-200 mt-0.5">
-            Ready to play • 0:00
-          </p>
-        </div>
-      </div>
-
+  <header>
+    <div class="status-bar">
+      <div id="trackTitle" aria-live="polite">Loading saved videos...</div>
+    </div>
+    <div class="loader-row">
+      <button type="button" class="top-btn" id="pickVideosBtn" aria-label="Add Videos from Phone Gallery. Automatically saves them so they load every time you open the app.">
+        + Add Phone Videos
+      </button>
+      <button type="button" class="top-btn" id="pickFolderBtn" aria-label="Scan Entire Video Folder. Pick any folder and automatically load all videos inside it.">
+        Scan Video Folder
+      </button>
     </div>
   </header>
 
-  <!-- =====================================================================
-       3. CENTER-SCREEN GIANT ACCESSIBLE CONTROL PAD (Main Requirement)
-       Positioned right in the center of the mobile screen with huge targets
-       so blind users can easily find Previous, Play/Pause, and Next.
-       ===================================================================== -->
-  <main class="flex-1 flex flex-col justify-center items-center px-3 py-3 w-full max-w-xl mx-auto" role="main" aria-label="Main Video Controls">
-    
-    <div class="w-full flex flex-col gap-3">
+  <div class="video-container">
+    <video id="videoPlayer" playsinline preload="metadata"></video>
+  </div>
 
-      <!-- PRIMARY CENTER ROW: PREVIOUS | GIANT PLAY/PAUSE | NEXT -->
-      <section aria-label="Primary Playback Controls" class="grid grid-cols-12 gap-3 items-stretch min-h-[210px] sm:min-h-[240px]">
-        
-        <!-- PREVIOUS VIDEO BUTTON (Left Center) -->
-        <button
-          type="button"
-          id="btn-prev"
-          aria-label="Previous Video. Currently on Video 1 of 3, Big Buck Bunny. Double tap to play previous video."
-          class="touch-btn col-span-3 bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-700 text-white border-4 border-white rounded-3xl flex flex-col items-center justify-center p-2 shadow-xl"
-        >
-          <svg class="w-12 h-12 sm:w-14 sm:h-14 text-yellow-400 mb-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
-          </svg>
-          <span class="text-base sm:text-lg font-black tracking-wide uppercase text-white">Prev</span>
-        </button>
+  <!-- GIANT CENTER CONTROLS FOR BLIND USER -->
+  <main class="center-controls" role="region" aria-label="Main Video Controls">
+    <button type="button" id="prevBtn" class="ctrl-btn" aria-label="Previous Video">
+      <span class="icon" aria-hidden="true">⏮</span>
+      <span class="label">Previous</span>
+    </button>
 
-        <!-- GIANT PLAY / PAUSE BUTTON (Dead Center of Screen) -->
-        <button
-          type="button"
-          id="btn-play-pause"
-          aria-pressed="false"
-          aria-label="Play Video: Big Buck Bunny, Video 1 of 3. Double tap to play."
-          class="touch-btn col-span-6 bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black border-4 border-white rounded-3xl flex flex-col items-center justify-center p-4 shadow-2xl"
-        >
-          <!-- Play Icon -->
-          <svg id="icon-play" class="w-20 h-20 sm:w-24 sm:h-24 text-black mb-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-          <!-- Pause Icon (Hidden initially) -->
-          <svg id="icon-pause" class="hidden w-20 h-20 sm:w-24 sm:h-24 text-black mb-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-          </svg>
-          <span id="play-pause-text" class="text-2xl sm:text-3xl font-black uppercase tracking-wider">
-            PLAY
-          </span>
-        </button>
+    <button type="button" id="playPauseBtn" class="ctrl-btn" aria-label="Play Video">
+      <span class="icon" id="playIcon" aria-hidden="true">▶</span>
+      <span class="label" id="playLabel">Play</span>
+    </button>
 
-        <!-- NEXT VIDEO BUTTON (Right Center) -->
-        <button
-          type="button"
-          id="btn-next"
-          aria-label="Next Video. Currently on Video 1 of 3, Big Buck Bunny. Double tap to play next video."
-          class="touch-btn col-span-3 bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-700 text-white border-4 border-white rounded-3xl flex flex-col items-center justify-center p-2 shadow-xl"
-        >
-          <svg class="w-12 h-12 sm:w-14 sm:h-14 text-yellow-400 mb-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
-          </svg>
-          <span class="text-base sm:text-lg font-black tracking-wide uppercase text-white">Next</span>
-        </button>
-
-      </section>
-
-      <!-- SECONDARY ROW: REWIND 10S | ANNOUNCE STATUS | FORWARD 10S -->
-      <section aria-label="Seek and Time Announcement Controls" class="grid grid-cols-3 gap-3 min-h-[105px]">
-        
-        <!-- Rewind 10 Seconds -->
-        <button
-          type="button"
-          id="btn-rewind"
-          aria-label="Rewind 10 seconds. Double tap to go back 10 seconds."
-          class="touch-btn bg-zinc-900 hover:bg-zinc-800 text-white border-4 border-yellow-400 rounded-2xl flex flex-col items-center justify-center p-3"
-        >
-          <span class="text-xl sm:text-2xl font-black text-yellow-400">-10s</span>
-          <span class="text-xs sm:text-sm font-bold uppercase mt-1 text-white">Rewind</span>
-        </button>
-
-        <!-- Speak / Announce Current Time & Video Status -->
-        <button
-          type="button"
-          id="btn-announce-status"
-          aria-label="Announce current video title, elapsed time, and remaining time. Double tap to hear status."
-          class="touch-btn bg-blue-950 hover:bg-blue-900 text-white border-4 border-white rounded-2xl flex flex-col items-center justify-center p-3"
-        >
-          <svg class="w-7 h-7 text-yellow-400 mb-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-xs sm:text-sm font-black uppercase text-center leading-tight">Speak Time & Info</span>
-        </button>
-
-        <!-- Forward 10 Seconds -->
-        <button
-          type="button"
-          id="btn-forward"
-          aria-label="Fast forward 10 seconds. Double tap to skip ahead 10 seconds."
-          class="touch-btn bg-zinc-900 hover:bg-zinc-800 text-white border-4 border-yellow-400 rounded-2xl flex flex-col items-center justify-center p-3"
-        >
-          <span class="text-xl sm:text-2xl font-black text-yellow-400">+10s</span>
-          <span class="text-xs sm:text-sm font-bold uppercase mt-1 text-white">Forward</span>
-        </button>
-
-      </section>
-
-      <!-- TERTIARY ROW: VOLUME BOOST / MUTE + VOICE FEEDBACK TOGGLE -->
-      <section aria-label="Audio and Speech Settings" class="grid grid-cols-2 gap-3 min-h-[76px]">
-        
-        <!-- Cycle Volume (100% -> 50% -> Mute -> 100%) -->
-        <button
-          type="button"
-          id="btn-volume"
-          aria-label="Volume Level: 100 percent. Double tap to change volume."
-          class="touch-btn bg-zinc-900 hover:bg-zinc-800 text-white border-2 border-zinc-500 rounded-2xl flex items-center justify-center gap-2 p-3"
-        >
-          <svg class="w-6 h-6 text-yellow-400 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-          </svg>
-          <span id="volume-text" class="text-sm sm:text-base font-extrabold">Volume: 100%</span>
-        </button>
-
-        <!-- Built-in Spoken Voice Assistant (Helps even if TalkBack is paused or testing) -->
-        <button
-          type="button"
-          id="btn-voice-assist"
-          aria-pressed="true"
-          aria-label="Built-in spoken voice feedback is On. Double tap to toggle extra voice announcements."
-          class="touch-btn bg-zinc-900 hover:bg-zinc-800 text-white border-2 border-yellow-400 rounded-2xl flex items-center justify-center gap-2 p-3"
-        >
-          <span class="w-3 h-3 rounded-full bg-green-400" id="voice-dot" aria-hidden="true"></span>
-          <span id="voice-text" class="text-sm sm:text-base font-extrabold">Voice Guide: ON</span>
-        </button>
-
-      </section>
-
-    </div>
+    <button type="button" id="nextBtn" class="ctrl-btn" aria-label="Next Video">
+      <span class="icon" aria-hidden="true">⏭</span>
+      <span class="label">Next</span>
+    </button>
   </main>
 
-  <!-- =====================================================================
-       4. FOOTER HELPER DRAWER: "Add to Home Screen" & TalkBack Instructions
-       ===================================================================== -->
-  <footer class="w-full px-3 pb-3 pt-1 border-t-2 border-zinc-800 bg-zinc-950" role="contentinfo">
-    <div class="max-w-xl mx-auto">
-      <details class="group bg-zinc-900 rounded-2xl border-2 border-zinc-700 overflow-hidden">
-        <summary 
-          class="cursor-pointer list-none p-3.5 flex items-center justify-between font-extrabold text-sm sm:text-base text-yellow-400"
-          aria-label="Setup Guide: How to Add to Mobile Home Screen and TalkBack Tips. Double tap to expand."
-        >
-          <span>📲 Setup Guide: Add to Home Screen & TalkBack Tips</span>
-          <span class="text-white text-lg group-open:rotate-180 transition-transform" aria-hidden="true">▼</span>
-        </summary>
-        
-        <div class="p-4 pt-2 text-sm text-zinc-200 space-y-3 border-t border-zinc-800 leading-relaxed">
-          <div>
-            <h3 class="font-black text-white text-base">1. How to Add to Home Screen (Android & iPhone)</h3>
-            <ul class="list-disc pl-5 mt-1 space-y-1">
-              <li><strong>Android (Chrome):</strong> Tap the three-dot menu (top right) and select <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong>. It will place a full-screen icon on your friend's phone home screen.</li>
-              <li><strong>iPhone (Safari):</strong> Tap the <strong>Share</strong> button at the bottom and select <strong>"Add to Home Screen"</strong>.</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 class="font-black text-white text-base">2. How Your Blind Friend Uses It with TalkBack</h3>
-            <ul class="list-disc pl-5 mt-1 space-y-1">
-              <li><strong>Center of Screen:</strong> Place a finger right in the middle of the screen to hear <em>"Play Video"</em> or <em>"Pause Video"</em>, then <strong>double-tap anywhere</strong> on the screen to toggle Play/Pause.</li>
-              <li><strong>Left & Right of Center:</strong> Slide finger slightly left for <strong>Previous Video</strong> or slightly right for <strong>Next Video</strong>, then double-tap.</li>
-              <li><strong>Load Phone Videos:</strong> Tap <em>"Load Phone Videos"</em> at the top right to select multiple MP4 or audio videos stored on the phone.</li>
-            </ul>
-          </div>
-        </div>
-      </details>
-    </div>
+  <footer>
+    <button type="button" id="speakInfoBtn" class="bottom-btn" aria-label="Speak current video name and time progress">
+      🔊 Speak Video Info
+    </button>
+    <button type="button" id="clearSavedBtn" class="bottom-btn clear-btn" aria-label="Reset and clear saved phone videos">
+      Reset List
+    </button>
   </footer>
 
-  <!-- =====================================================================
-       5. JAVASCRIPT APPLICATION LOGIC
-       ===================================================================== -->
   <script>
-    (function () {
-      'use strict';
-
-      /* -------------------------------------------------------------------
-         A. GENERATE PWA MANIFEST DYNAMICALLY FOR "ADD TO HOME SCREEN"
-         ------------------------------------------------------------------- */
-      function setupPWAManifest() {
-        try {
-          const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-            <rect width="512" height="512" rx="96" fill="#000000"/>
-            <rect x="24" y="24" width="464" height="464" rx="80" fill="none" stroke="#facc15" stroke-width="28"/>
-            <polygon points="180,130 380,256 180,382" fill="#facc15"/>
-          </svg>`;
-          const iconDataUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(iconSvg);
-
-          const manifest = {
-            name: 'Accessible TalkBack Video Player',
-            short_name: 'BlindPlayer',
-            description: 'Accessible center-button video player for TalkBack and VoiceOver users.',
-            start_url: window.location.href,
-            display: 'standalone',
-            orientation: 'portrait',
-            background_color: '#000000',
-            theme_color: '#000000',
-            icons: [
-              {
-                src: iconDataUrl,
-                sizes: '512x512',
-                type: 'image/svg+xml',
-                purpose: 'any maskable'
-              }
-            ]
-          };
-
-          const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
-          const manifestUrl = URL.createObjectURL(blob);
-          const linkEl = document.getElementById('pwa-manifest');
-          if (linkEl) linkEl.setAttribute('href', manifestUrl);
-        } catch (err) {
-          console.warn('PWA manifest setup skipped:', err);
-        }
+    // Default Sample Videos (Used only if no phone videos are saved yet)
+    const SAMPLE_VIDEOS = [
+      {
+        title: "Sample 1 - Nature Stream",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        isSample: true
+      },
+      {
+        title: "Sample 2 - Coastal Waves",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+        isSample: true
+      },
+      {
+        title: "Sample 3 - Mountain Drive",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+        isSample: true
       }
+    ];
 
-      /* -------------------------------------------------------------------
-         B. PLAYLIST DATA (Reliable Open MP4 Streams + Offline Synth Fallback)
-         ------------------------------------------------------------------- */
-      const playlist = [
-        {
-          title: 'Big Buck Bunny (Open Movie Clip)',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-          isLocal: false
-        },
-        {
-          title: 'Elephants Dream (Sci-Fi Animated Story)',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-          isLocal: false
-        },
-        {
-          title: 'For Bigger Blazes (Action Sample Clip)',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-          isLocal: false
-        }
-      ];
+    let playlist = [];
+    let currentIndex = 0;
 
-      let currentIndex = 0;
-      let isPlaying = false;
-      let volumeLevels = [1.0, 0.5, 0.0];
-      let currentVolumeIndex = 0;
-      let voiceGuideEnabled = true;
-      let usingOfflineFallback = false;
-      let fallbackTimer = null;
-      let fallbackSeconds = 0;
-      const fallbackDuration = 90; // 1 min 30 sec simulated duration if offline
+    const videoPlayer = document.getElementById('videoPlayer');
+    const prevBtn = document.getElementById('prevBtn');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playIcon = document.getElementById('playIcon');
+    const playLabel = document.getElementById('playLabel');
+    const nextBtn = document.getElementById('nextBtn');
+    const trackTitle = document.getElementById('trackTitle');
+    const liveAnnouncer = document.getElementById('liveAnnouncer');
+    const pickVideosBtn = document.getElementById('pickVideosBtn');
+    const pickFolderBtn = document.getElementById('pickFolderBtn');
+    const videoInput = document.getElementById('videoInput');
+    const folderInput = document.getElementById('folderInput');
+    const speakInfoBtn = document.getElementById('speakInfoBtn');
+    const clearSavedBtn = document.getElementById('clearSavedBtn');
 
-      /* -------------------------------------------------------------------
-         C. DOM ELEMENTS
-         ------------------------------------------------------------------- */
-      const videoEl = document.getElementById('main-video');
-      const fallbackCanvas = document.getElementById('fallback-canvas');
-      const srAssertive = document.getElementById('sr-assertive');
-      const srPolite = document.getElementById('sr-polite');
+    // --- TACTILE BEEP FOR BLIND FEEDBACK ---
+    function playTone(freq = 520, duration = 0.08) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = freq;
+        gain.gain.value = 0.12;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
 
-      const trackCounterEl = document.getElementById('track-counter');
-      const trackTitleEl = document.getElementById('track-title');
-      const visualStatusEl = document.getElementById('visual-status-text');
+    function announce(message) {
+      liveAnnouncer.textContent = '';
+      setTimeout(() => {
+        liveAnnouncer.textContent = message;
+      }, 50);
+    }
 
-      const btnPlayPause = document.getElementById('btn-play-pause');
-      const iconPlay = document.getElementById('icon-play');
-      const iconPause = document.getElementById('icon-pause');
-      const playPauseText = document.getElementById('play-pause-text');
+    // --- INDEXEDDB: AUTO-LOAD SAVED PHONE VIDEOS EVERY TIME APP OPENS ---
+    const DB_NAME = 'AccessibleVideoPlayerDB';
+    const STORE_NAME = 'savedVideos';
 
-      const btnPrev = document.getElementById('btn-prev');
-      const btnNext = document.getElementById('btn-next');
-      const btnRewind = document.getElementById('btn-rewind');
-      const btnForward = document.getElementById('btn-forward');
-      const btnAnnounceStatus = document.getElementById('btn-announce-status');
-      const btnVolume = document.getElementById('btn-volume');
-      const volumeText = document.getElementById('volume-text');
-      const btnVoiceAssist = document.getElementById('btn-voice-assist');
-      const voiceDot = document.getElementById('voice-dot');
-      const voiceText = document.getElementById('voice-text');
-
-      const btnLoadFiles = document.getElementById('btn-load-files');
-      const fileInput = document.getElementById('local-file-input');
-
-      /* -------------------------------------------------------------------
-         D. ACCESSIBLE AUDIO BEEPS & SPOKEN ANNOUNCEMENTS
-         Gives immediate earcon confirmation when a blind user double-taps.
-         ------------------------------------------------------------------- */
-      let audioCtx = null;
-
-      function playTactileTone(freq = 520, durationMs = 70) {
-        try {
-          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-          if (!AudioContextClass) return;
-          if (!audioCtx) audioCtx = new AudioContextClass();
-          if (audioCtx.state === 'suspended') audioCtx.resume();
-
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-          gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + durationMs / 1000);
-
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-
-          osc.start();
-          osc.stop(audioCtx.currentTime + durationMs / 1000);
-        } catch (e) {
-          // Ignore audio context restrictions
-        }
-      }
-
-      /**
-       * Announces messages both to Screen Readers (TalkBack/VoiceOver via aria-live)
-       * and optionally via Web Speech API so the user always hears clear feedback.
-       */
-      function announce(message, priority = 'assertive') {
-        // 1. Update ARIA Live Region for TalkBack / VoiceOver
-        const region = priority === 'assertive' ? srAssertive : srPolite;
-        if (region) {
-          region.textContent = '';
-          setTimeout(() => {
-            region.textContent = message;
-          }, 30);
-        }
-
-        // 2. Also speak via SpeechSynthesis if Voice Guide is enabled
-        if (voiceGuideEnabled && 'speechSynthesis' in window) {
-          try {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(message);
-            utterance.rate = 1.05;
-            utterance.pitch = 1.0;
-            window.speechSynthesis.speak(utterance);
-          } catch (e) {
-            // Ignore speech synthesis errors on restricted webviews
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
           }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveVideosToPhoneDB(filesArray) {
+      try {
+        const db = await openDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.clear(); // Replace old playlist with newly selected phone videos
+        for (const file of filesArray) {
+          store.add({
+            title: file.name.replace(/\.[^/.]+$/, ""),
+            blob: file
+          });
         }
-      }
-
-      /* -------------------------------------------------------------------
-         E. TIME FORMATTING HELPERS (For natural spoken sentences)
-         ------------------------------------------------------------------- */
-      function formatVisualTime(seconds) {
-        if (!isFinite(seconds) || seconds < 0) return '0:00';
-        const totalSec = Math.floor(seconds);
-        const mins = Math.floor(totalSec / 60);
-        const secs = totalSec % 60;
-        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-      }
-
-      function formatSpokenTime(seconds) {
-        if (!isFinite(seconds) || seconds <= 0) return '0 seconds';
-        const totalSec = Math.floor(seconds);
-        const mins = Math.floor(totalSec / 60);
-        const secs = totalSec % 60;
-        const parts = [];
-        if (mins > 0) parts.push(`${mins} ${mins === 1 ? 'minute' : 'minutes'}`);
-        if (secs > 0 || mins === 0) parts.push(`${secs} ${secs === 1 ? 'second' : 'seconds'}`);
-        return parts.join(' and ');
-      }
-
-      function getCurrentElapsed() {
-        return usingOfflineFallback ? fallbackSeconds : (videoEl.currentTime || 0);
-      }
-
-      function getCurrentDuration() {
-        if (usingOfflineFallback) return fallbackDuration;
-        return isFinite(videoEl.duration) && videoEl.duration > 0 ? videoEl.duration : 0;
-      }
-
-      /* -------------------------------------------------------------------
-         F. DYNAMIC ARIA-LABEL & UI SYNCHRONIZATION
-         Ensures every button's TalkBack label reflects the exact live state.
-         ------------------------------------------------------------------- */
-      function updateUIAndAriaLabels() {
-        const currentTrack = playlist[currentIndex];
-        const totalTracks = playlist.length;
-        const posText = `Video ${currentIndex + 1} of ${totalTracks}`;
-
-        trackCounterEl.textContent = posText;
-        trackTitleEl.textContent = currentTrack.title;
-
-        const elapsed = getCurrentElapsed();
-        const duration = getCurrentDuration();
-        const stateWord = isPlaying ? 'Playing' : 'Paused';
-        const durationStr = duration > 0 ? ` / ${formatVisualTime(duration)}` : '';
-        visualStatusEl.textContent = `${stateWord} • ${formatVisualTime(elapsed)}${durationStr}`;
-
-        // Update Giant Play/Pause Button visuals & TalkBack label
-        if (isPlaying) {
-          iconPlay.classList.add('hidden');
-          iconPause.classList.remove('hidden');
-          playPauseText.textContent = 'PAUSE';
-          btnPlayPause.setAttribute('aria-pressed', 'true');
-          btnPlayPause.setAttribute(
-            'aria-label',
-            `Pause Video. Currently playing ${currentTrack.title}, ${posText}. Double tap to pause.`
-          );
-        } else {
-          iconPause.classList.add('hidden');
-          iconPlay.classList.remove('hidden');
-          playPauseText.textContent = 'PLAY';
-          btnPlayPause.setAttribute('aria-pressed', 'false');
-          btnPlayPause.setAttribute(
-            'aria-label',
-            `Play Video. Ready to play ${currentTrack.title}, ${posText}. Double tap to play.`
-          );
-        }
-
-        // Update Previous & Next Button ARIA Labels with upcoming video names
-        const prevIndex = (currentIndex - 1 + totalTracks) % totalTracks;
-        const nextIndex = (currentIndex + 1) % totalTracks;
-
-        btnPrev.setAttribute(
-          'aria-label',
-          `Previous Video: ${playlist[prevIndex].title} (Video ${prevIndex + 1} of ${totalTracks}). Double tap to switch.`
-        );
-        btnNext.setAttribute(
-          'aria-label',
-          `Next Video: ${playlist[nextIndex].title} (Video ${nextIndex + 1} of ${totalTracks}). Double tap to switch.`
-        );
-      }
-
-      /* -------------------------------------------------------------------
-         G. OFFLINE / SYNTHESIZED FALLBACK ENGINE
-         If the device has no internet and hasn't loaded local files yet,
-         simulate playback smoothly so all accessible controls remain testable.
-         ------------------------------------------------------------------- */
-      function startOfflineFallbackLoop() {
-        stopOfflineFallbackLoop();
-        fallbackTimer = setInterval(() => {
-          if (!isPlaying) return;
-          fallbackSeconds += 1;
-          drawFallbackCanvas();
-          if (fallbackSeconds >= fallbackDuration) {
-            fallbackSeconds = 0;
-            playNextVideo();
-          } else {
-            updateUIAndAriaLabels();
-          }
-        }, 1000);
-      }
-
-      function stopOfflineFallbackLoop() {
-        if (fallbackTimer) {
-          clearInterval(fallbackTimer);
-          fallbackTimer = null;
-        }
-      }
-
-      function drawFallbackCanvas() {
-        if (!fallbackCanvas) return;
-        const ctx = fallbackCanvas.getContext('2d');
-        if (!ctx) return;
-        const w = (fallbackCanvas.width = 320);
-        const h = (fallbackCanvas.height = 180);
-        ctx.fillStyle = '#18181b';
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = '#facc15';
-        ctx.font = 'bold 28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(formatVisualTime(fallbackSeconds), w / 2, h / 2 + 10);
-      }
-
-      /* -------------------------------------------------------------------
-         H. CORE PLAYBACK CONTROLS (Play/Pause, Prev, Next, Seek, Volume)
-         ------------------------------------------------------------------- */
-      function loadTrack(index, autoPlay = false, announceChange = true) {
-        stopOfflineFallbackLoop();
-        usingOfflineFallback = false;
-        fallbackSeconds = 0;
-        if (fallbackCanvas) fallbackCanvas.classList.add('hidden');
-
-        currentIndex = (index + playlist.length) % playlist.length;
-        const track = playlist[currentIndex];
-
-        videoEl.src = track.url;
-        videoEl.load();
-        isPlaying = false;
-        updateUIAndAriaLabels();
-
-        if (autoPlay) {
-          attemptPlay(announceChange, true);
-        } else if (announceChange) {
-          announce(
-            `Loaded Video ${currentIndex + 1} of ${playlist.length}: ${track.title}. Double tap center button to play.`
-          );
-        }
-      }
-
-      function attemptPlay(shouldAnnounce = true, isTrackSwitch = false) {
-        const track = playlist[currentIndex];
-
-        if (usingOfflineFallback) {
-          isPlaying = true;
-          startOfflineFallbackLoop();
-          updateUIAndAriaLabels();
-          if (shouldAnnounce) {
-            announce(
-              isTrackSwitch
-                ? `Playing Video ${currentIndex + 1} of ${playlist.length}: ${track.title}`
-                : `Playing ${track.title}`
-            );
-          }
-          return;
-        }
-
-        const playPromise = videoEl.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              isPlaying = true;
-              updateUIAndAriaLabels();
-              if (shouldAnnounce) {
-                announce(
-                  isTrackSwitch
-                    ? `Playing Video ${currentIndex + 1} of ${playlist.length}: ${track.title}`
-                    : `Playing ${track.title}`
-                );
-              }
-            })
-            .catch(() => {
-              // Activate resilient offline simulation if remote stream is unreachable
-              usingOfflineFallback = true;
-              if (fallbackCanvas) fallbackCanvas.classList.remove('hidden');
-              drawFallbackCanvas();
-              isPlaying = true;
-              startOfflineFallbackLoop();
-              updateUIAndAriaLabels();
-              if (shouldAnnounce) {
-                announce(`Playing ${track.title}`);
-              }
-            });
-        }
-      }
-
-      function pausePlayback(shouldAnnounce = true) {
-        if (!usingOfflineFallback) {
-          videoEl.pause();
-        }
-        isPlaying = false;
-        stopOfflineFallbackLoop();
-        updateUIAndAriaLabels();
-
-        if (shouldAnnounce) {
-          const elapsedSpoken = formatSpokenTime(getCurrentElapsed());
-          announce(`Paused at ${elapsedSpoken}.`);
-        }
-      }
-
-      function togglePlayPause() {
-        playTactileTone(isPlaying ? 400 : 640, 80);
-        if (isPlaying) {
-          pausePlayback(true);
-        } else {
-          attemptPlay(true, false);
-        }
-      }
-
-      function playPreviousVideo() {
-        playTactileTone(460, 75);
-        const prevIdx = (currentIndex - 1 + playlist.length) % playlist.length;
-        loadTrack(prevIdx, true, true);
-      }
-
-      function playNextVideo() {
-        playTactileTone(580, 75);
-        const nextIdx = (currentIndex + 1) % playlist.length;
-        loadTrack(nextIdx, true, true);
-      }
-
-      function seekRelative(deltaSeconds) {
-        playTactileTone(deltaSeconds > 0 ? 600 : 440, 60);
-        const duration = getCurrentDuration();
-        let target = getCurrentElapsed() + deltaSeconds;
-        if (target < 0) target = 0;
-        if (duration > 0 && target > duration) target = duration;
-
-        if (usingOfflineFallback) {
-          fallbackSeconds = target;
-          drawFallbackCanvas();
-        } else {
-          try {
-            videoEl.currentTime = target;
-          } catch (e) {
-            // Ignore if metadata hasn't finished loading
-          }
-        }
-
-        updateUIAndAriaLabels();
-        const directionText = deltaSeconds > 0 ? `Skipped forward ${deltaSeconds} seconds` : `Rewound ${Math.abs(deltaSeconds)} seconds`;
-        announce(`${directionText}. Current time: ${formatSpokenTime(target)}.`);
-      }
-
-      function announceCurrentStatus() {
-        playTactileTone(520, 60);
-        const track = playlist[currentIndex];
-        const elapsed = getCurrentElapsed();
-        const duration = getCurrentDuration();
-        const remaining = duration > elapsed ? duration - elapsed : 0;
-        const stateWord = isPlaying ? 'Playing' : 'Paused';
-
-        let msg = `${stateWord}: ${track.title}, Video ${currentIndex + 1} of ${playlist.length}. Elapsed time: ${formatSpokenTime(elapsed)}.`;
-        if (duration > 0) {
-          msg += ` Remaining time: ${formatSpokenTime(remaining)}.`;
-        }
-        announce(msg, 'assertive');
-      }
-
-      function cycleVolume() {
-        playTactileTone(500, 60);
-        currentVolumeIndex = (currentVolumeIndex + 1) % volumeLevels.length;
-        const newVol = volumeLevels[currentVolumeIndex];
-        videoEl.volume = newVol;
-        videoEl.muted = newVol === 0;
-
-        const pct = Math.round(newVol * 100);
-        const labelStr = pct === 0 ? 'Muted (0%)' : `${pct}%`;
-        volumeText.textContent = `Volume: ${labelStr}`;
-        btnVolume.setAttribute(
-          'aria-label',
-          `Volume Level: ${labelStr}. Double tap to change volume.`
-        );
-        announce(`Volume set to ${labelStr}.`);
-      }
-
-      function toggleVoiceGuide() {
-        voiceGuideEnabled = !voiceGuideEnabled;
-        playTactileTone(voiceGuideEnabled ? 660 : 360, 70);
-
-        btnVoiceAssist.setAttribute('aria-pressed', String(voiceGuideEnabled));
-        if (voiceGuideEnabled) {
-          voiceDot.className = 'w-3 h-3 rounded-full bg-green-400';
-          voiceText.textContent = 'Voice Guide: ON';
-          btnVoiceAssist.setAttribute(
-            'aria-label',
-            'Built-in spoken voice feedback is On. Double tap to turn off extra voice announcements.'
-          );
-          announce('Built-in voice guide enabled.');
-        } else {
-          if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-          voiceDot.className = 'w-3 h-3 rounded-full bg-zinc-500';
-          voiceText.textContent = 'Voice Guide: OFF';
-          btnVoiceAssist.setAttribute(
-            'aria-label',
-            'Built-in spoken voice feedback is Off. TalkBack live region announcements remain active.'
-          );
-          // Still update ARIA live region for TalkBack
-          if (srAssertive) srAssertive.textContent = 'Built-in voice guide turned off. Using TalkBack only.';
-        }
-      }
-
-      /* -------------------------------------------------------------------
-         I. LOCAL DEVICE VIDEO / AUDIO FILE PICKER HANDLER
-         Lets the user or friend pick videos straight from phone gallery/files
-         ------------------------------------------------------------------- */
-      function handleLocalFilesSelected(event) {
-        const files = Array.from(event.target.files || []);
-        if (files.length === 0) return;
-
-        const newTracks = files.map((file) => {
-          // Clean up filename for natural screen reader speech
-          const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
-          return {
-            title: cleanName || file.name,
-            url: URL.createObjectURL(file),
-            isLocal: true
-          };
+        return new Promise((res) => {
+          tx.oncomplete = () => res(true);
         });
+      } catch (err) {
+        console.error('Could not save videos to DB:', err);
+      }
+    }
 
-        // Replace or prepend user's phone videos at the start of playlist
-        playlist.unshift(...newTracks);
-        loadTrack(0, true, false);
+    async function loadSavedVideosFromPhoneDB() {
+      try {
+        const db = await openDB();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.getAll();
+        return new Promise((resolve) => {
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => resolve([]);
+        });
+      } catch (e) {
+        return [];
+      }
+    }
 
-        const countWord = newTracks.length === 1 ? '1 phone video' : `${newTracks.length} phone videos`;
-        announce(`Loaded ${countWord}. Now playing ${newTracks[0].title}.`);
+    // --- LOAD AND CONTROL PLAYLIST ---
+    function loadTrack(index, autoPlay = false) {
+      if (!playlist.length) return;
+      currentIndex = (index + playlist.length) % playlist.length;
+      const item = playlist[currentIndex];
+
+      videoPlayer.src = item.url;
+      const positionText = `Video ${currentIndex + 1} of ${playlist.length}: ${item.title}`;
+      trackTitle.textContent = positionText;
+
+      updateAriaLabels();
+
+      if (autoPlay) {
+        videoPlayer.play().then(() => {
+          updatePlayButtonUI(true);
+          announce(`Playing ${positionText}`);
+        }).catch(() => {
+          updatePlayButtonUI(false);
+        });
+      } else {
+        updatePlayButtonUI(false);
+        announce(`Loaded ${positionText}`);
+      }
+    }
+
+    function updatePlayButtonUI(isPlaying) {
+      const item = playlist[currentIndex] || { title: 'Video' };
+      if (isPlaying) {
+        playIcon.textContent = '⏸';
+        playLabel.textContent = 'Pause';
+        playPauseBtn.setAttribute('aria-label', `Pause. Currently playing Video ${currentIndex + 1} of ${playlist.length}: ${item.title}`);
+      } else {
+        playIcon.textContent = '▶';
+        playLabel.textContent = 'Play';
+        playPauseBtn.setAttribute('aria-label', `Play Video ${currentIndex + 1} of ${playlist.length}: ${item.title}`);
+      }
+    }
+
+    function updateAriaLabels() {
+      if (!playlist.length) return;
+      const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+      const nextIndex = (currentIndex + 1) % playlist.length;
+
+      prevBtn.setAttribute('aria-label', `Previous Video. Go to Video ${prevIndex + 1}: ${playlist[prevIndex].title}`);
+      nextBtn.setAttribute('aria-label', `Next Video. Go to Video ${nextIndex + 1}: ${playlist[nextIndex].title}`);
+      updatePlayButtonUI(!videoPlayer.paused);
+    }
+
+    // --- CENTER BUTTON EVENTS ---
+    playPauseBtn.addEventListener('click', () => {
+      if (videoPlayer.paused) {
+        playTone(660, 0.08);
+        videoPlayer.play();
+        updatePlayButtonUI(true);
+        announce(`Playing ${playlist[currentIndex].title}`);
+      } else {
+        playTone(440, 0.08);
+        videoPlayer.pause();
+        updatePlayButtonUI(false);
+        announce(`Paused ${playlist[currentIndex].title}`);
+      }
+    });
+
+    prevBtn.addEventListener('click', () => {
+      playTone(480, 0.08);
+      loadTrack(currentIndex - 1, true);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      playTone(720, 0.08);
+      loadTrack(currentIndex + 1, true);
+    });
+
+    videoPlayer.addEventListener('ended', () => {
+      loadTrack(currentIndex + 1, true);
+    });
+
+    // --- HANDLE PHONE VIDEO / FOLDER SELECTION ---
+    async function handleSelectedFiles(fileList) {
+      const validVideos = Array.from(fileList).filter(file =>
+        file.type.startsWith('video/') ||
+        file.type.startsWith('audio/') ||
+        /\.(mp4|mkv|webm|mov|avi|3gp|mp3|m4a|wav)$/i.test(file.name)
+      );
+
+      if (validVideos.length === 0) {
+        announce('No video files found in selection. Please try again.');
+        alert('No video files were found in your selection.');
+        return;
       }
 
-      /* -------------------------------------------------------------------
-         J. EVENT LISTENERS & VIDEO ELEMENT HOOKS
-         ------------------------------------------------------------------- */
-      btnPlayPause.addEventListener('click', togglePlayPause);
-      btnPrev.addEventListener('click', playPreviousVideo);
-      btnNext.addEventListener('click', playNextVideo);
-      btnRewind.addEventListener('click', () => seekRelative(-10));
-      btnForward.addEventListener('click', () => seekRelative(10));
-      btnAnnounceStatus.addEventListener('click', announceCurrentStatus);
-      btnVolume.addEventListener('click', cycleVolume);
-      btnVoiceAssist.addEventListener('click', toggleVoiceGuide);
+      // Sort alphabetically so order is predictable for blind user
+      validVideos.sort((a, b) => a.name.localeCompare(b.name));
 
-      btnLoadFiles.addEventListener('click', () => {
-        playTactileTone(550, 60);
-        fileInput.click();
-      });
-      fileInput.addEventListener('change', handleLocalFilesSelected);
+      playlist = validVideos.map(file => ({
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        url: URL.createObjectURL(file),
+        isSample: false
+      }));
 
-      // Keep UI & ARIA labels updated as video plays
-      videoEl.addEventListener('timeupdate', updateUIAndAriaLabels);
-      videoEl.addEventListener('loadedmetadata', updateUIAndAriaLabels);
-      videoEl.addEventListener('ended', () => {
-        announce('Video finished. Loading next video.');
-        playNextVideo();
-      });
+      // Save to IndexedDB so they auto-load next time the app opens!
+      await saveVideosToPhoneDB(validVideos);
 
-      // If network stream errors out, seamlessly switch to offline fallback mode
-      videoEl.addEventListener('error', () => {
-        usingOfflineFallback = true;
-        if (fallbackCanvas) fallbackCanvas.classList.remove('hidden');
-        drawFallbackCanvas();
-        updateUIAndAriaLabels();
-      });
+      loadTrack(0, true);
+      announce(`Loaded and saved ${validVideos.length} videos from phone. They will load automatically every time you open the app.`);
+    }
 
-      // Keyboard shortcuts for external Bluetooth keyboards / switch devices
-      window.addEventListener('keydown', (e) => {
-        if (e.target && ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-        if (e.code === 'Space') {
-          e.preventDefault();
-          togglePlayPause();
-        } else if (e.code === 'ArrowRight') {
-          e.preventDefault();
-          seekRelative(10);
-        } else if (e.code === 'ArrowLeft') {
-          e.preventDefault();
-          seekRelative(-10);
-        } else if (e.code === 'KeyN') {
-          e.preventDefault();
-          playNextVideo();
-        } else if (e.code === 'KeyP') {
-          e.preventDefault();
-          playPreviousVideo();
-        }
-      });
+    pickVideosBtn.addEventListener('click', () => {
+      videoInput.value = '';
+      videoInput.click();
+    });
 
-      /* -------------------------------------------------------------------
-         K. INITIALIZE ON WINDOW LOAD
-         ------------------------------------------------------------------- */
-      window.onload = function () {
-        setupPWAManifest();
-        loadTrack(0, false, false);
-        // Set initial polite announcement for TalkBack when app opens
-        if (srPolite) {
-          srPolite.textContent =
-            'Accessible Video Player Ready. Giant Play button is in the center of the screen. Previous is on the left, Next is on the right.';
-        }
-      };
-    })();
+    pickFolderBtn.addEventListener('click', () => {
+      folderInput.value = '';
+      folderInput.click();
+    });
+
+    videoInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleSelectedFiles(e.target.files);
+      }
+    });
+
+    folderInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleSelectedFiles(e.target.files);
+      }
+    });
+
+    // --- SPEAK TIME & INFO ---
+    function formatSeconds(sec) {
+      if (!sec || isNaN(sec)) return '0 minutes';
+      const mins = Math.floor(sec / 60);
+      const secs = Math.floor(sec % 60);
+      return `${mins} minutes ${secs} seconds`;
+    }
+
+    speakInfoBtn.addEventListener('click', () => {
+      const item = playlist[currentIndex];
+      const current = formatSeconds(videoPlayer.currentTime);
+      const total = formatSeconds(videoPlayer.duration);
+      const msg = `Video ${currentIndex + 1} of ${playlist.length}: ${item.title}. Position: ${current} out of ${total}.`;
+      announce(msg);
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(msg);
+        window.speechSynthesis.speak(utter);
+      }
+    });
+
+    // --- CLEAR SAVED VIDEOS ---
+    clearSavedBtn.addEventListener('click', async () => {
+      const db = await openDB();
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).clear();
+      playlist = [...SAMPLE_VIDEOS];
+      loadTrack(0, false);
+      announce('Cleared saved phone videos. Loaded default sample videos.');
+    });
+
+    // --- STARTUP: AUTO-LOAD SAVED VIDEOS FROM PHONE DATABASE ---
+    window.addEventListener('DOMContentLoaded', async () => {
+      const savedRecords = await loadSavedVideosFromPhoneDB();
+      if (savedRecords.length > 0) {
+        playlist = savedRecords.map(rec => ({
+          title: rec.title,
+          url: URL.createObjectURL(rec.blob),
+          isSample: false
+        }));
+        loadTrack(0, false);
+        announce(`Automatically loaded ${playlist.length} saved phone videos. Ready to play.`);
+      } else {
+        playlist = [...SAMPLE_VIDEOS];
+        loadTrack(0, false);
+      }
+    });
   </script>
 </body>
 </html>
