@@ -1,0 +1,6 @@
+{
+  "appId": "com.ramu.blindplayer",
+  "appName": "Blind Video Player",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
