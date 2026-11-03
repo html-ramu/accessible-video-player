@@ -44,7 +44,7 @@
     }
 
     #trackTitle {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: 800;
       color: var(--yellow);
       white-space: nowrap;
@@ -54,7 +54,7 @@
 
     .video-container {
       width: 100%;
-      height: 22dvh;
+      height: 24dvh;
       background: #050505;
       display: flex;
       align-items: center;
@@ -127,7 +127,7 @@
       background: var(--card);
       border-top: 3px solid #333;
       display: grid;
-      grid-template-columns: 1.5fr 1fr;
+      grid-template-columns: 1.4fr 1fr;
       gap: 10px;
     }
 
@@ -164,7 +164,7 @@
   <div id="liveAnnouncer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
 
   <header>
-    <div id="trackTitle" aria-live="polite">Scanning phone for videos...</div>
+    <div id="trackTitle" aria-live="polite">Loading phone videos...</div>
   </header>
 
   <div class="video-container">
@@ -192,8 +192,8 @@
     <button type="button" id="speakInfoBtn" class="bottom-btn" aria-label="Speak current video name and time progress">
       🔊 Speak Info
     </button>
-    <button type="button" id="rescanBtn" class="bottom-btn rescan-btn" aria-label="Rescan phone folders for new videos">
-      🔄 Rescan Phone
+    <button type="button" id="rescanBtn" class="bottom-btn rescan-btn" aria-label="Scan phone for videos">
+      🔄 Scan Videos
     </button>
   </footer>
 
@@ -211,19 +211,6 @@
     const liveAnnouncer = document.getElementById('liveAnnouncer');
     const speakInfoBtn = document.getElementById('speakInfoBtn');
     const rescanBtn = document.getElementById('rescanBtn');
-
-    const VIDEO_REGEX = /\.(mp4|mkv|webm|3gp|mov|avi)$/i;
-
-    // Folders on Android phone internal storage to scan automatically
-    const FOLDERS_TO_SCAN = [
-      'Movies',
-      'Download',
-      'DCIM/Camera',
-      'DCIM',
-      'Videos',
-      'WhatsApp/Media/WhatsApp Video',
-      'Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Video'
-    ];
 
     function playTone(freq = 520, duration = 0.08) {
       try {
@@ -246,77 +233,34 @@
       }, 50);
     }
 
-    async function scanFolderRecursive(Filesystem, folderPath, depth = 0) {
-      if (depth > 2) return [];
-      let found = [];
-      try {
-        const res = await Filesystem.readdir({
-          path: folderPath,
-          directory: 'EXTERNAL_STORAGE'
-        });
-
-        for (const item of res.files) {
-          const fullPath = folderPath ? `${folderPath}/${item.name}` : item.name;
-          if (item.type === 'directory' && !item.name.startsWith('.')) {
-            const subFiles = await scanFolderRecursive(Filesystem, fullPath, depth + 1);
-            found = found.concat(subFiles);
-          } else if (VIDEO_REGEX.test(item.name)) {
-            let fileUri = item.uri;
-            if (!fileUri) {
-              const uriObj = await Filesystem.getUri({
-                path: fullPath,
-                directory: 'EXTERNAL_STORAGE'
-              });
-              fileUri = uriObj.uri;
-            }
-            found.push({
-              title: item.name.replace(/\.[^/.]+$/, ""),
-              url: window.Capacitor.convertFileSrc(fileUri)
-            });
-          }
-        }
-      } catch (e) {
-        // Ignore folders that don't exist on this specific phone
-      }
-      return found;
-    }
-
-    async function autoScanPhoneVideos() {
-      trackTitle.textContent = "Scanning phone for videos...";
-      announce("Scanning phone folders for videos, please wait.");
-
-      // Check if running inside installed Android APK
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem) {
-        const { Filesystem } = window.Capacitor.Plugins;
+    function loadPhoneVideos() {
+      // Call Native Android Java MediaStore Bridge
+      if (window.AndroidBridge && typeof window.AndroidBridge.getVideos === 'function') {
         try {
-          await Filesystem.requestPermissions();
-        } catch (e) {}
+          const jsonStr = window.AndroidBridge.getVideos();
+          const list = JSON.parse(jsonStr);
 
-        let allFound = [];
-        for (const folder of FOLDERS_TO_SCAN) {
-          const videos = await scanFolderRecursive(Filesystem, folder, 0);
-          allFound = allFound.concat(videos);
-        }
-
-        // Remove duplicates by URL
-        const uniqueMap = new Map();
-        for (const v of allFound) {
-          uniqueMap.set(v.url, v);
-        }
-        playlist = Array.from(uniqueMap.values());
-
-        if (playlist.length > 0) {
-          loadTrack(0, false);
-          announce(`Found ${playlist.length} videos on your phone. Press Play in the center of the screen.`);
-          return;
-        } else {
-          trackTitle.textContent = "No videos found in phone folders";
-          announce("No videos found in Movies, Download, or Camera folders. Please allow storage permission and tap Rescan Phone.");
-          return;
+          if (list && list.length > 0) {
+            playlist = list.map(item => ({
+              title: item.title,
+              // Convert native file path into Capacitor playable stream URL
+              url: window.Capacitor ? window.Capacitor.convertFileSrc(item.path) : item.path
+            }));
+            loadTrack(0, false);
+            announce(`Loaded ${playlist.length} videos from phone. Double tap center button to play.`);
+            return;
+          } else {
+            trackTitle.textContent = "Tap Scan Videos & Allow Permission";
+            announce("Please allow video permission on screen, then tap Scan Videos.");
+            window.AndroidBridge.askPermission();
+            return;
+          }
+        } catch (err) {
+          console.error(err);
         }
       }
 
-      // Fallback sample videos when testing in browser before APK install
+      // Fallback only if opened in normal desktop browser
       playlist = [
         {
           title: "Sample 1 - Nature Stream",
@@ -330,12 +274,19 @@
       loadTrack(0, false);
     }
 
+    // Called automatically by Android Java as soon as permission is granted!
+    window.onPermissionGranted = function() {
+      loadPhoneVideos();
+    };
+
     function loadTrack(index, autoPlay = false) {
       if (!playlist.length) return;
       currentIndex = (index + playlist.length) % playlist.length;
       const item = playlist[currentIndex];
 
       videoPlayer.src = item.url;
+      videoPlayer.load();
+
       const positionText = `Video ${currentIndex + 1} of ${playlist.length}: ${item.title}`;
       trackTitle.textContent = positionText;
       updateAriaLabels();
@@ -344,8 +295,9 @@
         videoPlayer.play().then(() => {
           updatePlayButtonUI(true);
           announce(`Playing ${positionText}`);
-        }).catch(() => {
+        }).catch((err) => {
           updatePlayButtonUI(false);
+          announce(`Selected ${positionText}. Tap Play.`);
         });
       } else {
         updatePlayButtonUI(false);
@@ -379,14 +331,17 @@
 
     playPauseBtn.addEventListener('click', () => {
       if (!playlist.length) {
-        autoScanPhoneVideos();
+        loadPhoneVideos();
         return;
       }
       if (videoPlayer.paused) {
         playTone(660, 0.08);
-        videoPlayer.play();
-        updatePlayButtonUI(true);
-        announce(`Playing ${playlist[currentIndex].title}`);
+        videoPlayer.play().then(() => {
+          updatePlayButtonUI(true);
+          announce(`Playing ${playlist[currentIndex].title}`);
+        }).catch(() => {
+          announce(`Cannot play this video format, skipping to next.`);
+        });
       } else {
         playTone(440, 0.08);
         videoPlayer.pause();
@@ -413,7 +368,7 @@
 
     speakInfoBtn.addEventListener('click', () => {
       if (!playlist.length) {
-        announce("No videos loaded yet. Tap Rescan Phone.");
+        announce("No videos loaded yet. Tap Scan Videos.");
         return;
       }
       const item = playlist[currentIndex];
@@ -429,11 +384,11 @@
 
     rescanBtn.addEventListener('click', () => {
       playTone(600, 0.08);
-      autoScanPhoneVideos();
+      loadPhoneVideos();
     });
 
     window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(autoScanPhoneVideos, 400);
+      setTimeout(loadPhoneVideos, 500);
     });
   </script>
 </body>
